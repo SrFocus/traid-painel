@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Painel de Gerenciamento</title>
+    <script>
+      // DevTools Protection
+      (function() {
+        // Block keyboard shortcuts
+        document.addEventListener('keydown', function(e) {
+          // F12
+          if (e.key === 'F12' || e.keyCode === 123) {
+            e.preventDefault();
+            return false;
+          }
+          // Ctrl+Shift+I, Ctrl+Shift+J, Ctrl+Shift+C
+          if (e.ctrlKey && e.shiftKey && (e.key === 'I' || e.key === 'i' || e.key === 'J' || e.key === 'j' || e.key === 'C' || e.key === 'c')) {
+            e.preventDefault();
+            return false;
+          }
+          // Ctrl+U (view source)
+          if (e.ctrlKey && (e.key === 'U' || e.key === 'u')) {
+            e.preventDefault();
+            return false;
+          }
+        });
+
+        // Block right-click context menu
+        document.addEventListener('contextmenu', function(e) {
+          e.preventDefault();
+          return false;
+        });
+
+        // Detect DevTools via debugger
+        (function detect() {
+          const start = performance.now();
+          debugger;
+          const end = performance.now();
+          if (end - start > 100) {
+            document.body.innerHTML = '<div style="display:flex;align-items:center;justify-content:center;height:100vh;background:#0f172a;color:#ef4444;font-size:24px;font-family:sans-serif;">Acesso não autorizado</div>';
+          }
+          setTimeout(detect, 1000);
+        })();
+
+        // Detect window resize (DevTools docked)
+        let threshold = 160;
+        setInterval(function() {
+          if (window.outerWidth - window.innerWidth > threshold || 
+              window.outerHeight - window.innerHeight > threshold) {
+            document.body.innerHTML = '<div style="display:flex;align-items:center;justify-content:center;height:100vh;background:#0f172a;color:#ef4444;font-size:24px;font-family:sans-serif;">DevTools detectado</div>';
+          }
+        }, 1000);
+      })();
+    </script>
+    <script type="module" crossorigin src="/assets/index-Dtl2cWYV.js"></script>
+    <link rel="modulepreload" crossorigin href="/assets/vendor-react-1T4Qqv7O.js">
+    <link rel="modulepreload" crossorigin href="/assets/vendor-icons-Dpl1kk5S.js">
+    <link rel="stylesheet" crossorigin href="/assets/index-DGvW6H0k.css">
+  </head>
+  <body>
+    <div id="root"></div>
+  </body>
+</html>
