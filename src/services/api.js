@@ -72,8 +72,8 @@ export const getHouses = (page = 1, limit = 20, search = '') =>
 export const deleteHouse = (id) =>
   api.delete(`/houses/${id}`);
 
-export const addPlayerVehicle = (playerId, vehicle, plate = '') =>
-  api.post(`/players/${playerId}/vehicles`, { vehicle, plate });
+export const addPlayerVehicle = (playerId, vehicle, plate = '', dias = null) =>
+  api.post(`/players/${playerId}/vehicles`, { vehicle, plate, dias });
 
 export const removePlayerVehicle = (playerId, vehicleId) =>
   api.delete(`/players/${playerId}/vehicles/${vehicleId}`);

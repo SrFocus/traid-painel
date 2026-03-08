@@ -39,6 +39,7 @@ function PlayerDetail() {
   const [itemForm, setItemForm] = useState({ name: '', amount: 1 });
   const [vehicleModal, setVehicleModal] = useState({ open: false, action: 'add', vehicle: null });
   const [vehicleForm, setVehicleForm] = useState({ model: '', plate: '', item: '', amount: 1 });
+  const [vehicleDias, setVehicleDias] = useState('');
   const [houseModal, setHouseModal] = useState({ open: false, action: 'add', house: null, item: null });
   const [houseForm, setHouseForm] = useState({ item: '', amount: 1 });
   const [houseAddModal, setHouseAddModal] = useState({ open: false });
@@ -165,15 +166,17 @@ function PlayerDetail() {
     }
     setVehicleModal({ open: true, action: 'add', vehicle: null });
     setVehicleForm({ model: '', plate: '', item: '', amount: 1 });
+    setVehicleDias('');
   };
 
   const handleAddVehicle = async () => {
     if (!vehicleForm.model.trim()) return;
 
     try {
-      await addPlayerVehicle(id, vehicleForm.model.trim(), vehicleForm.plate.trim());
+      await addPlayerVehicle(id, vehicleForm.model.trim(), vehicleForm.plate.trim(), vehicleDias ? parseInt(vehicleDias) : null);
       setVehicleModal({ open: false, action: 'add', vehicle: null });
       setVehicleForm({ model: '', plate: '', item: '', amount: 1 });
+      setVehicleDias('');
       loadPlayer();
       setMessage({ type: 'success', text: 'Veículo adicionado com sucesso!' });
       setTimeout(() => setMessage({ type: '', text: '' }), 3000);
@@ -561,9 +564,18 @@ function PlayerDetail() {
                             </button>
                           </div>
                         </div>
-                        <div className="mt-2 flex gap-4 text-xs text-slate-400">
+                        <div className="mt-2 flex flex-wrap gap-3 text-xs text-slate-400">
                           <span>Motor: {vehicle.engine || 0}</span>
                           <span>Fuel: {vehicle.fuel || 0}</span>
+                          {vehicle.data_expiracao && (() => {
+                            const expDate = new Date(vehicle.data_expiracao.replace(' ', 'T') + '-03:00');
+                            const isExpired = expDate < new Date();
+                            return (
+                              <span className={`px-1.5 py-0.5 rounded text-[10px] font-medium ${isExpired ? 'bg-red-500/20 text-red-400' : 'bg-orange-500/20 text-orange-300'}`}>
+                                {isExpired ? '(expirado)' : `exp: ${expDate.toLocaleDateString()}`}
+                              </span>
+                            );
+                          })()}
                         </div>
                       </div>
                     </div>
@@ -796,7 +808,7 @@ function PlayerDetail() {
               ) : (
                 (data.permissions || []).map(group => {
                   const temp = (data.tempGroups || []).find(t => t.grupo === group);
-                  const expDate = temp ? new Date(temp.data_expiracao) : null;
+                  const expDate = temp ? new Date(temp.data_expiracao.replace(' ', 'T') + '-03:00') : null;
                   const isExpired = expDate && expDate < new Date();
                   return (
                     <span key={group} className={`inline-flex items-center gap-1.5 text-xs font-medium px-2.5 py-1 rounded-full border ${
@@ -810,7 +822,7 @@ function PlayerDetail() {
                         {group}
                         {temp && (
                           <span className="ml-1 text-[10px] opacity-70">
-                            {isExpired ? '(expirado)' : `(exp: ${expDate.toLocaleDateString('pt-BR')})`}
+                            {isExpired ? '(expirado)' : `(exp: ${expDate.toLocaleDateString()})`}
                           </span>
                         )}
                       </span>
@@ -1172,70 +1184,130 @@ function PlayerDetail() {
 
       {/* Vehicle Modal */}
       {vehicleModal.open && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-          <div className="bg-slate-800 rounded-xl p-6 w-full max-w-md border border-slate-700">
-            <h3 className="text-lg font-semibold text-white mb-4">
-              {vehicleModal.action === 'add' ? 'Adicionar Veículo' : `Baú: ${vehicleModal.vehicle?.vehicle}`}
-            </h3>
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+          <div className="bg-slate-800 rounded-xl border border-slate-700 w-full max-w-md shadow-2xl">
 
             {vehicleModal.action === 'add' ? (
-              <div className="space-y-4">
-                <div>
-                  <label className="block text-slate-400 text-sm mb-2">Modelo do Veículo</label>
-                  <input
-                    type="text"
-                    value={vehicleForm.model}
-                    onChange={(e) => setVehicleForm(prev => ({ ...prev, model: e.target.value }))}
-                    placeholder="Ex: sultanrs"
-                    className="w-full bg-slate-700 border border-slate-600 rounded-lg py-2 px-4 text-white focus:outline-none focus:border-primary-500"
-                  />
+              <>
+                {/* Header */}
+                <div className="flex items-center justify-between p-6 border-b border-slate-700">
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 bg-green-500/20 rounded-lg flex items-center justify-center">
+                      <Car className="text-green-400" size={20} />
+                    </div>
+                    <h3 className="text-white font-semibold text-lg">Adicionar Veículo</h3>
+                  </div>
+                  <button
+                    onClick={() => { setVehicleModal({ open: false, action: 'add', vehicle: null }); setVehicleForm({ model: '', plate: '', item: '', amount: 1 }); setVehicleDias(''); }}
+                    className="p-2 text-slate-400 hover:text-white hover:bg-slate-700 rounded-lg transition-colors"
+                  >
+                    <X size={20} />
+                  </button>
                 </div>
-                <div>
-                  <label className="block text-slate-400 text-sm mb-2">Placa (opcional)</label>
-                  <input
-                    type="text"
-                    value={vehicleForm.plate}
-                    onChange={(e) => setVehicleForm(prev => ({ ...prev, plate: e.target.value }))}
-                    placeholder="Deixe vazio para gerar automática"
-                    className="w-full bg-slate-700 border border-slate-600 rounded-lg py-2 px-4 text-white focus:outline-none focus:border-primary-500"
-                  />
+                <div className="p-6 space-y-4">
+                  <div>
+                    <label className="text-slate-400 text-xs font-semibold uppercase tracking-wider mb-1.5 block">Modelo do Veículo *</label>
+                    <input
+                      type="text"
+                      value={vehicleForm.model}
+                      onChange={(e) => setVehicleForm(prev => ({ ...prev, model: e.target.value }))}
+                      placeholder="Ex: sultanrs"
+                      className="w-full bg-slate-700 border border-slate-600 rounded-lg py-2.5 px-3 text-white placeholder-slate-500 focus:outline-none focus:border-green-500"
+                    />
+                  </div>
+                  <div>
+                    <label className="text-slate-400 text-xs font-semibold uppercase tracking-wider mb-1.5 block">Placa <span className="text-slate-500 normal-case font-normal">(opcional — gerada automaticamente)</span></label>
+                    <input
+                      type="text"
+                      value={vehicleForm.plate}
+                      onChange={(e) => setVehicleForm(prev => ({ ...prev, plate: e.target.value.toUpperCase() }))}
+                      placeholder="Ex: ABC1234"
+                      maxLength={8}
+                      className="w-full bg-slate-700 border border-slate-600 rounded-lg py-2.5 px-3 text-white placeholder-slate-500 font-mono focus:outline-none focus:border-green-500"
+                    />
+                  </div>
+                  <div>
+                    <label className="text-slate-400 text-xs font-semibold uppercase tracking-wider mb-1.5 block">Dias <span className="text-slate-500 normal-case font-normal">(opcional — permanente se vazio)</span></label>
+                    <input
+                      type="number"
+                      value={vehicleDias}
+                      onChange={(e) => setVehicleDias(e.target.value)}
+                      placeholder="Ex: 30"
+                      min="1"
+                      className="w-full bg-slate-700 border border-slate-600 rounded-lg py-2.5 px-3 text-white placeholder-slate-500 focus:outline-none focus:border-orange-500"
+                    />
+                    {vehicleDias ? (
+                      <p className="text-orange-400 text-xs mt-1">Temporário: expira em {vehicleDias} dia(s)</p>
+                    ) : (
+                      <p className="text-slate-500 text-xs mt-1">Permanente (sem expiração)</p>
+                    )}
+                  </div>
+                  <div className="flex gap-3 pt-1">
+                    <button
+                      onClick={() => { setVehicleModal({ open: false, action: 'add', vehicle: null }); setVehicleForm({ model: '', plate: '', item: '', amount: 1 }); setVehicleDias(''); }}
+                      className="flex-1 py-2.5 bg-slate-700 hover:bg-slate-600 text-slate-300 rounded-lg text-sm transition-colors"
+                    >
+                      Cancelar
+                    </button>
+                    <button
+                      onClick={handleAddVehicle}
+                      className="flex-1 py-2.5 bg-green-500 hover:bg-green-600 text-white rounded-lg text-sm font-bold transition-colors"
+                    >
+                      Adicionar
+                    </button>
+                  </div>
                 </div>
-              </div>
+              </>
             ) : (
-              <div className="space-y-4">
-                <div className="p-4 bg-slate-700/50 rounded-lg border border-slate-600">
-                  <p className="text-white font-medium">{vehicleModal.vehicle?.vehicle}</p>
-                  <p className="text-slate-400 text-sm">Placa: {vehicleModal.vehicle?.plate}</p>
+              <>
+                {/* Header */}
+                <div className="flex items-center justify-between p-6 border-b border-slate-700">
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 bg-purple-500/20 rounded-lg flex items-center justify-center">
+                      <Package className="text-purple-400" size={20} />
+                    </div>
+                    <div>
+                      <h3 className="text-white font-semibold">Baú do Veículo</h3>
+                      <p className="text-slate-400 text-sm">{vehicleModal.vehicle?.vehicle} — {vehicleModal.vehicle?.plate}</p>
+                    </div>
+                  </div>
+                  <button
+                    onClick={() => { setVehicleModal({ open: false, action: 'add', vehicle: null }); setVehicleForm({ model: '', plate: '', item: '', amount: 1 }); }}
+                    className="p-2 text-slate-400 hover:text-white hover:bg-slate-700 rounded-lg transition-colors"
+                  >
+                    <X size={20} />
+                  </button>
                 </div>
+                <div className="p-6 space-y-4">
+                  <div className="flex gap-2">
+                    <input
+                      type="text"
+                      value={vehicleForm.item}
+                      onChange={(e) => setVehicleForm(prev => ({ ...prev, item: e.target.value }))}
+                      placeholder="Nome do item"
+                      className="flex-1 bg-slate-700 border border-slate-600 rounded-lg py-2 px-3 text-white placeholder-slate-400 focus:outline-none focus:border-primary-500 text-sm"
+                    />
+                    <input
+                      type="number"
+                      min="1"
+                      value={vehicleForm.amount}
+                      onChange={(e) => setVehicleForm(prev => ({ ...prev, amount: parseInt(e.target.value) || 1 }))}
+                      className="w-20 bg-slate-700 border border-slate-600 rounded-lg py-2 px-3 text-white focus:outline-none focus:border-primary-500 text-sm"
+                    />
+                    <button
+                      onClick={handleAddVehicleTrunkItem}
+                      disabled={!vehicleForm.item.trim()}
+                      className="px-3 py-2 bg-green-500 hover:bg-green-600 disabled:opacity-50 disabled:cursor-not-allowed text-white rounded-lg transition-colors text-sm font-medium"
+                    >
+                      Adicionar
+                    </button>
+                  </div>
 
-                <div className="grid grid-cols-2 gap-2">
-                  <input
-                    type="text"
-                    value={vehicleForm.item}
-                    onChange={(e) => setVehicleForm(prev => ({ ...prev, item: e.target.value }))}
-                    placeholder="Item"
-                    className="bg-slate-700 border border-slate-600 rounded-lg py-2 px-3 text-white focus:outline-none focus:border-primary-500"
-                  />
-                  <input
-                    type="number"
-                    min="1"
-                    value={vehicleForm.amount}
-                    onChange={(e) => setVehicleForm(prev => ({ ...prev, amount: parseInt(e.target.value) || 1 }))}
-                    className="bg-slate-700 border border-slate-600 rounded-lg py-2 px-3 text-white focus:outline-none focus:border-primary-500"
-                  />
-                </div>
-                <button
-                  onClick={handleAddVehicleTrunkItem}
-                  className="w-full py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 transition-colors"
-                >
-                  Adicionar no Baú
-                </button>
-
-                <div className="max-h-64 overflow-y-auto">
-                  {(vehicleModal.vehicle?.trunkItems || []).length > 0 ? (
-                    <div className="grid grid-cols-3 gap-2">
-                      {vehicleModal.vehicle.trunkItems.map((item) => (
-                        <div key={item.slot} className="relative bg-slate-700/40 rounded-lg p-2 flex flex-col items-center text-center group">
+                  <div className="max-h-64 overflow-y-auto">
+                    {(vehicleModal.vehicle?.trunkItems || []).length > 0 ? (
+                      <div className="grid grid-cols-3 gap-2">
+                        {vehicleModal.vehicle.trunkItems.map((item) => (
+                          <div key={item.slot} className="relative bg-slate-700/40 rounded-lg p-2 flex flex-col items-center text-center group">
                           <div className="w-12 h-12 mb-1 flex items-center justify-center">
                             <img
                               src={`https://media.githubusercontent.com/media/SrFocus/cdn-traid/main/inventory/${item.item.toLowerCase()}.png`}
@@ -1260,33 +1332,18 @@ function PlayerDetail() {
                     <p className="text-slate-500 text-sm">Baú vazio</p>
                   )}
                 </div>
+                <div className="flex gap-3 pt-2">
+                  <button
+                    onClick={() => { setVehicleModal({ open: false, action: 'add', vehicle: null }); setVehicleForm({ model: '', plate: '', item: '', amount: 1 }); }}
+                    className="flex-1 py-2.5 bg-slate-700 hover:bg-slate-600 text-slate-300 rounded-lg text-sm transition-colors"
+                  >
+                    Fechar
+                  </button>
+                </div>
               </div>
+            </>
             )}
 
-            <div className="flex gap-3 mt-6">
-              <button
-                onClick={() => {
-                  setVehicleModal({ open: false, action: 'add', vehicle: null });
-                  setVehicleForm({ model: '', plate: '', item: '', amount: 1 });
-                }}
-                className="flex-1 py-2 bg-slate-700 text-slate-300 rounded-lg hover:bg-slate-600 transition-colors"
-              >
-                Cancelar
-              </button>
-              <button
-                onClick={() => {
-                  if (vehicleModal.action === 'add') {
-                    handleAddVehicle();
-                  } else {
-                    setVehicleModal({ open: false, action: 'add', vehicle: null });
-                    setVehicleForm({ model: '', plate: '', item: '', amount: 1 });
-                  }
-                }}
-                className="flex-1 py-2 bg-primary-500 text-white rounded-lg hover:bg-primary-600 transition-colors"
-              >
-                {vehicleModal.action === 'add' ? 'Adicionar' : 'Fechar'}
-              </button>
-            </div>
           </div>
         </div>
       )}

@@ -13,7 +13,7 @@ function Vehicles() {
   const [trunkMessage, setTrunkMessage] = useState({ type: '', text: '' });
   const [removeTarget, setRemoveTarget] = useState({ slot: null, item: null, maxAmount: 0, qty: 1, qtyInput: '1' });
   const [addVehicleModal, setAddVehicleModal] = useState(false);
-  const [addVehicleForm, setAddVehicleForm] = useState({ userId: '', vehicle: '', plate: '' });
+  const [addVehicleForm, setAddVehicleForm] = useState({ userId: '', vehicle: '', plate: '', dias: '' });
   const [addVehicleMessage, setAddVehicleMessage] = useState({ type: '', text: '' });
   const [addVehicleLoading, setAddVehicleLoading] = useState(false);
 
@@ -107,9 +107,9 @@ function Vehicles() {
     }
     setAddVehicleLoading(true);
     try {
-      await addPlayerVehicle(addVehicleForm.userId, addVehicleForm.vehicle.trim(), addVehicleForm.plate.trim());
+      await addPlayerVehicle(addVehicleForm.userId, addVehicleForm.vehicle.trim(), addVehicleForm.plate.trim(), addVehicleForm.dias ? parseInt(addVehicleForm.dias) : null);
       setAddVehicleMessage({ type: 'success', text: 'Veículo adicionado com sucesso!' });
-      setAddVehicleForm({ userId: '', vehicle: '', plate: '' });
+      setAddVehicleForm({ userId: '', vehicle: '', plate: '', dias: '' });
       setTimeout(() => {
         setAddVehicleModal(false);
         setAddVehicleMessage({ type: '', text: '' });
@@ -162,7 +162,7 @@ function Vehicles() {
           </form>
           {/* Add Vehicle */}
           <button
-            onClick={() => { setAddVehicleModal(true); setAddVehicleMessage({ type: '', text: '' }); }}
+            onClick={() => { setAddVehicleModal(true); setAddVehicleForm({ userId: '', vehicle: '', plate: '', dias: '' }); setAddVehicleMessage({ type: '', text: '' }); }}
             className="flex items-center gap-2 bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded-lg transition-colors font-medium"
           >
             <Plus size={18} />
@@ -433,6 +433,23 @@ function Vehicles() {
                   maxLength={8}
                   className="w-full bg-slate-700 border border-slate-600 rounded-lg py-2.5 px-3 text-white placeholder-slate-500 font-mono focus:outline-none focus:border-green-500"
                 />
+              </div>
+
+              <div>
+                <label className="text-slate-400 text-xs font-semibold uppercase tracking-wider mb-1.5 block">Dias <span className="text-slate-500 normal-case font-normal">(opcional — permanente se vazio)</span></label>
+                <input
+                  type="number"
+                  value={addVehicleForm.dias}
+                  onChange={(e) => setAddVehicleForm(prev => ({ ...prev, dias: e.target.value }))}
+                  placeholder="Ex: 30"
+                  min="1"
+                  className="w-full bg-slate-700 border border-slate-600 rounded-lg py-2.5 px-3 text-white placeholder-slate-500 focus:outline-none focus:border-orange-500"
+                />
+                {addVehicleForm.dias ? (
+                  <p className="text-orange-400 text-xs mt-1">Temporário: expira em {addVehicleForm.dias} dia(s)</p>
+                ) : (
+                  <p className="text-slate-500 text-xs mt-1">Permanente (sem expiração)</p>
+                )}
               </div>
 
               {addVehicleMessage.text && (
