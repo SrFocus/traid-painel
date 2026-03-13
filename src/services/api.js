@@ -39,6 +39,8 @@ export const getStats = () => api.get('/stats');
 export const getPlayers = (page = 1, limit = 20, search = '', sortBy = 'id', sortOrder = 'desc') => 
   api.get('/players', { params: { page, limit, search, sortBy, sortOrder } });
 
+export const getOnlinePlayers = () => api.get('/players/online');
+
 export const getPlayer = (id) => 
   api.get(`/players/${id}`);
 

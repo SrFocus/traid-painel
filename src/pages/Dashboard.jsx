@@ -1,17 +1,31 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { getStats } from '../services/api';
-import { Users, Car, Ban, DollarSign, TrendingUp, Crown } from 'lucide-react';
+import { getStats, getOnlinePlayers } from '../services/api';
+import { Users, Car, Wifi, Ban, DollarSign, TrendingUp, Crown } from 'lucide-react';
 
 function Dashboard() {
   const navigate = useNavigate();
   const [stats, setStats] = useState(null);
+  const [onlineCount, setOnlineCount] = useState(0);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
 
   useEffect(() => {
     loadStats();
+    loadOnlinePlayers();
+    // Atualiza jogadores online a cada 5 segundos
+    const interval = setInterval(loadOnlinePlayers, 5000);
+    return () => clearInterval(interval);
   }, []);
+
+  const loadOnlinePlayers = async () => {
+    try {
+      const response = await getOnlinePlayers();
+      setOnlineCount(response.data.onlineIds?.length || 0);
+    } catch (err) {
+      console.error('Erro ao carregar jogadores online:', err);
+    }
+  };
 
   const loadStats = async () => {
     try {
@@ -50,11 +64,11 @@ function Dashboard() {
 
   const statCards = [
     { 
-      title: 'Total de Jogadores', 
-      value: stats?.totalPlayers || 0, 
-      icon: Users, 
-      color: 'text-blue-500',
-      bgColor: 'bg-blue-500/10'
+      title: 'Jogadores Online', 
+      value: onlineCount, 
+      icon: Wifi, 
+      color: 'text-green-500',
+      bgColor: 'bg-green-500/10'
     },
     { 
       title: 'Dinheiro no Cassino', 

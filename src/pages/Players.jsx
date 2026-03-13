@@ -1,10 +1,11 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { getPlayers } from '../services/api';
+import { getPlayers, getOnlinePlayers } from '../services/api';
 import { Search, ChevronLeft, ChevronRight, Eye, User, Phone, Wallet, ArrowUpDown, ArrowUp, ArrowDown } from 'lucide-react';
 
 function Players() {
   const [players, setPlayers] = useState([]);
+  const [onlineIds, setOnlineIds] = useState([]);
   const [pagination, setPagination] = useState({ page: 1, totalPages: 1, total: 0 });
   const [search, setSearch] = useState('');
   const [loading, setLoading] = useState(true);
@@ -13,7 +14,20 @@ function Players() {
 
   useEffect(() => {
     loadPlayers();
+    loadOnlinePlayers();
+    // Atualizar status online a cada 5 segundos (real-time)
+    const interval = setInterval(loadOnlinePlayers, 5000);
+    return () => clearInterval(interval);
   }, [pagination.page, sortBy, sortOrder]);
+
+  const loadOnlinePlayers = async () => {
+    try {
+      const response = await getOnlinePlayers();
+      setOnlineIds(response.data.onlineIds || []);
+    } catch (err) {
+      console.error('Erro ao carregar jogadores online:', err);
+    }
+  };
 
   const loadPlayers = async () => {
     setLoading(true);
@@ -179,9 +193,15 @@ function Players() {
                           <User className="text-slate-400" size={20} />
                         </div>
                         <div>
-                          <p className="text-white font-medium">
-                            {player.name} {player.name2}
-                          </p>
+                          <div className="flex items-center gap-2">
+                            <span 
+                              className={`w-2.5 h-2.5 rounded-full ${onlineIds.includes(player.id) ? 'bg-green-500 shadow-lg shadow-green-500/50' : 'bg-red-500 shadow-lg shadow-red-500/50'}`}
+                              title={onlineIds.includes(player.id) ? 'Online' : 'Offline'}
+                            />
+                            <p className="text-white font-medium">
+                              {player.name} {player.name2}
+                            </p>
+                          </div>
                           <p className="text-slate-400 text-sm font-mono">
                             {player.steam?.substring(0, 20)}...
                           </p>
