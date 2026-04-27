@@ -60,6 +60,12 @@ export const addInventoryItem = (id, item, amount) =>
 export const removeInventoryItem = (id, slot, amount = null) => 
   api.delete(`/players/${id}/inventory/${slot}`, { params: amount ? { amount } : {} });
 
+export const addPlayerWeaponSkin = (playerId, component) =>
+  api.post(`/players/${playerId}/weapon-skins`, { component });
+
+export const removePlayerWeaponSkin = (playerId, component) =>
+  api.delete(`/players/${playerId}/weapon-skins/${encodeURIComponent(component)}`);
+
 // Vehicles
 export const getVehicles = (page = 1, limit = 20, search = '', userId = '') => 
   api.get('/vehicles', { params: { page, limit, search, userId } });
