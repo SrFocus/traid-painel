@@ -16,11 +16,13 @@ import {
   addPlayerHouse,
   removePlayerHouse,
   addPlayerGroup,
-  removePlayerGroup
+  removePlayerGroup,
+  addPlayerWeaponSkin,
+  removePlayerWeaponSkin
 } from '../services/api';
 import { 
   ArrowLeft, Save, User, Phone, Calendar, 
-  DollarSign, Car, Plus, Minus, RefreshCw, Ban, Coins, Wallet, Package, Heart, Droplet, Utensils, X, Home, Trash2, Shield
+  DollarSign, Car, Plus, Minus, RefreshCw, Ban, Coins, Wallet, Package, Heart, Droplet, Utensils, X, Home, Trash2, Shield, Palette
 } from 'lucide-react';
 
 function PlayerDetail() {
@@ -49,6 +51,7 @@ function PlayerDetail() {
   const [groupInput, setGroupInput] = useState('');
   const [groupDias, setGroupDias] = useState('');
   const [groupMessage, setGroupMessage] = useState({ type: '', text: '' });
+  const [weaponSkinInput, setWeaponSkinInput] = useState('');
 
   useEffect(() => {
     loadPlayer();
@@ -314,6 +317,32 @@ function PlayerDetail() {
       await loadPlayer();
     } catch (err) {
       setGroupMessage({ type: 'error', text: 'Erro ao remover' });
+    }
+  };
+
+  const handleAddWeaponSkin = async () => {
+    const component = weaponSkinInput.trim().toUpperCase();
+    if (!component) return;
+
+    try {
+      await addPlayerWeaponSkin(id, component);
+      setWeaponSkinInput('');
+      await loadPlayer();
+      setMessage({ type: 'success', text: `Skin ${component} adicionada com sucesso!` });
+      setTimeout(() => setMessage({ type: '', text: '' }), 3000);
+    } catch (err) {
+      setMessage({ type: 'error', text: err.response?.data?.error || 'Erro ao adicionar skin' });
+    }
+  };
+
+  const handleRemoveWeaponSkin = async (component) => {
+    try {
+      await removePlayerWeaponSkin(id, component);
+      await loadPlayer();
+      setMessage({ type: 'success', text: `Skin ${component} removida com sucesso!` });
+      setTimeout(() => setMessage({ type: '', text: '' }), 3000);
+    } catch (err) {
+      setMessage({ type: 'error', text: err.response?.data?.error || 'Erro ao remover skin' });
     }
   };
 
@@ -633,6 +662,64 @@ function PlayerDetail() {
               </div>
             ) : (
               <p className="text-slate-500">Nenhuma casa registrada</p>
+            )}
+          </div>
+
+          {/* Skins de Arma */}
+          <div className="bg-slate-800 rounded-xl p-6 border border-slate-700 animate-slideUp hover-lift" style={{ animationDelay: '0.23s', opacity: 0, animationFillMode: 'forwards' }}>
+            <div className="flex items-center justify-between mb-6 gap-3">
+              <div className="flex items-center gap-3">
+                <Palette className="text-fuchsia-400" size={24} />
+                <h2 className="text-lg font-semibold text-white">Skins de Arma ({data.weaponSkins?.length || 0})</h2>
+              </div>
+            </div>
+
+            <div className="flex flex-col sm:flex-row gap-2 mb-4">
+              <input
+                type="text"
+                list="weapon-skins-list"
+                value={weaponSkinInput}
+                onChange={(e) => setWeaponSkinInput(e.target.value)}
+                onKeyDown={(e) => e.key === 'Enter' && handleAddWeaponSkin()}
+                placeholder="Ex: COMPONENT_AK47_SKIN"
+                className="flex-1 bg-slate-700 border border-slate-600 rounded-lg py-2 px-3 text-white text-sm placeholder-slate-500 focus:outline-none focus:border-fuchsia-500"
+              />
+              <button
+                onClick={handleAddWeaponSkin}
+                className="px-3 py-2 bg-fuchsia-500/20 hover:bg-fuchsia-500/30 text-fuchsia-300 rounded-lg transition-colors"
+              >
+                Adicionar Skin
+              </button>
+              <datalist id="weapon-skins-list">
+                {(data.weaponSkinStock || []).map((skin) => (
+                  <option key={skin.component} value={skin.component}>{skin.name} - {skin.component}</option>
+                ))}
+              </datalist>
+            </div>
+
+            {(data.weaponSkins || []).length > 0 ? (
+              <div className="flex flex-wrap gap-2">
+                {(data.weaponSkins || []).map((skin) => (
+                  <div key={skin.component} className="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg border border-slate-600 bg-slate-700/50">
+                    <div className="flex flex-col leading-tight">
+                      <span className="text-xs text-white">{skin.name || skin.component}</span>
+                      <span className="text-[10px] text-slate-400 font-mono">{skin.component}</span>
+                    </div>
+                    {skin.equipped && (
+                      <span className="text-[10px] px-1.5 py-0.5 rounded bg-green-500/20 text-green-400">Equipada</span>
+                    )}
+                    <button
+                      onClick={() => handleRemoveWeaponSkin(skin.component)}
+                      className="text-slate-400 hover:text-red-400 transition-colors"
+                      title="Remover skin"
+                    >
+                      <X size={12} />
+                    </button>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <p className="text-slate-500">Nenhuma skin de arma registrada</p>
             )}
           </div>
 
